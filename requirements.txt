@@ -4,6 +4,7 @@ beautifulsoup4==4.12.3
 boto3==1.34.131
 chainlit==1.1.306
 chromadb==0.4.24
+datasetsforecast==0.0.8
 html2text==2020.1.16
 llama_index==0.10.58
 llama-index-core==0.10.582.post1
@@ -25,6 +26,7 @@ python-dotenv==1.0.1
 qdrant-client==1.10.1
 Requests==2.32.3
 sec_api==1.0.18
+statsforecast==1.7.6
 ta==0.11.0
 tavily-python==0.3.3
 vanna==0.6.4
