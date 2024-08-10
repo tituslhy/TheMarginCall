@@ -114,7 +114,7 @@ class Forecaster:
             levels (Optional[List[int]], optional): Confidence level for prediction intervals. Defaults to [80,95].
         """
         self.forecasts = self.sf.forecast(h=h, level=levels)
-        self.forecasts = forecasts.reset_index()
+        self.forecasts = self.forecasts.reset_index()
     
     def forecast_ticker(self, ticker: Optional[str] = None) -> Dict[str, List[float]]:
         """Returns a forecast for a ticker of interest
