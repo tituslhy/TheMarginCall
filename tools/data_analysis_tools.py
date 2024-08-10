@@ -4,9 +4,10 @@ warnings.filterwarnings('ignore')
 
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 import yfinance as yf
-from datetime import datetime
 import pandas as pd
-from typing import Optional, Literal, List, Union, Tuple
+from typing import Optional, Literal, List, Union, Tuple, Dict
+
+from forecaster import Forecaster
 
 import os
 import sys
@@ -37,53 +38,59 @@ class DataAnalysisTools(BaseToolSpec):
         "get_longest_uptrend",
         "get_longest_downtrend",
         "cagr",
-        "get_statistics"
+        "get_statistics",
+        "forecast"
     ]
     
     def __init__(self) -> None:
         """Initializes the Yahoo finance tool spec"""
         
-    def get_stock_data(self, 
-                       ticker: str,
-                       period: Optional[
-                           Literal["1d",
-                                   "5d",
-                                   "1mo",
-                                   "3mo",
-                                   "6mo",
-                                   "1y",
-                                   "2y",
-                                   "5y",
-                                   "10y",
-                                   "ytd",
-                                   "max"]
-                           ] = "10y") -> pd.DataFrame:
-        """Gets the daily historical prices and volume for a ticker across a specified period"""
-        return rename_columns(ticker = ticker, df = yf.Ticker(ticker).history(period=period))
+    def get_stock_data(
+        self, 
+        ticker: str,
+        period: Optional[
+            Literal["1d",
+                    "5d",
+                    "1mo",
+                    "3mo",
+                    "6mo",
+                    "1y",
+                    "2y",
+                    "5y",
+                    "10y",
+                    "ytd",
+                    "max"]
+            ] = "10y") -> pd.DataFrame:
+        """Gets the daily historical prices and volume for a ticker across a specified 
+        period"""
+        return rename_columns(ticker = ticker, df = yf.Ticker(ticker).history(
+            period=period
+        ))
     
-    def get_min_or_max(self, 
-                       ticker: str,
-                       field: Literal["Open", 
-                                      "High", 
-                                      "Low",
-                                      "Close",
-                                      "Volume",
-                                      "Dividends",
-                                      "Stock Splits"],
-                       period: Optional[
-                           Literal["1d",
-                                   "5d",
-                                   "1mo",
-                                   "3mo",
-                                   "6mo",
-                                   "1y",
-                                   "2y",
-                                   "5y",
-                                   "10y",
-                                   "ytd",
-                                   "max"]
-                           ] = "10y",
-                       get_max: Optional[bool] = True):
+    def get_min_or_max(
+        self, 
+        ticker: str,
+        field: Literal["Open", 
+                        "High", 
+                        "Low",
+                        "Close",
+                        "Volume",
+                        "Dividends",
+                        "Stock Splits"],
+        period: Optional[
+            Literal["1d",
+                    "5d",
+                    "1mo",
+                    "3mo",
+                    "6mo",
+                    "1y",
+                    "2y",
+                    "5y",
+                    "10y",
+                    "ytd",
+                    "max"]
+            ] = "10y",
+        get_max: Optional[bool] = True):
         """Gets min or max value of the field of interest"""
         df = self.get_stock_data(ticker=ticker, period=period)
         field = process_string(ticker=ticker, string_=field)
@@ -93,21 +100,22 @@ class DataAnalysisTools(BaseToolSpec):
             value = df[field].min()
         return df[df[field] == value]
     
-    def get_correlation(self, 
-                        ticker: str,
-                        period: Optional[
-                           Literal["1d",
-                                   "5d",
-                                   "1mo",
-                                   "3mo",
-                                   "6mo",
-                                   "1y",
-                                   "2y",
-                                   "5y",
-                                   "10y",
-                                   "ytd",
-                                   "max"]
-                           ] = "10y"):
+    def get_correlation(
+        self, 
+        ticker: str,
+        period: Optional[
+            Literal["1d",
+                    "5d",
+                    "1mo",
+                    "3mo",
+                    "6mo",
+                    "1y",
+                    "2y",
+                    "5y",
+                    "10y",
+                    "ytd",
+                    "max"]
+            ] = "10y"):
         """Computes correlation between all metrics for a specific ticker"""
         return self.get_stock_data(ticker=ticker, period=period).corr()
     
@@ -135,35 +143,37 @@ class DataAnalysisTools(BaseToolSpec):
             if df_fin is None:
                 df_fin = df
             else:
-                df_fin = pd.merge(df_fin, 
-                                  df, 
-                                  left_index = True,
-                                  right_index = True)
+                df_fin = pd.merge(
+                    df_fin, 
+                    df, 
+                    left_index = True,
+                    right_index = True)
         return df_fin.corr()
     
-    def get_rolling_average(self, 
-                            ticker: str,
-                            field: Literal["Open", 
-                                      "High", 
-                                      "Low",
-                                      "Close",
-                                      "Volume",
-                                      "Dividends",
-                                      "Stock Splits"], 
-                            n: Optional[int] = 30,
-                            period: Optional[
-                                        Literal["1d",
-                                                "5d",
-                                                "1mo",
-                                                "3mo",
-                                                "6mo",
-                                                "1y",
-                                                "2y",
-                                                "5y",
-                                                "10y",
-                                                "ytd",
-                                                "max"]
-                                        ] = "10y"):
+    def get_rolling_average(
+        self, 
+        ticker: str,
+        field: Literal["Open", 
+                    "High", 
+                    "Low",
+                    "Close",
+                    "Volume",
+                    "Dividends",
+                    "Stock Splits"], 
+        n: Optional[int] = 30,
+        period: Optional[
+                    Literal["1d",
+                            "5d",
+                            "1mo",
+                            "3mo",
+                            "6mo",
+                            "1y",
+                            "2y",
+                            "5y",
+                            "10y",
+                            "ytd",
+                            "max"]
+                    ] = "10y"):
         """Computes moving average for field of interest across a specified period"""
         df = self.get_stock_data(ticker=ticker, period=period)
         field = process_string(ticker=ticker, string_=field)
@@ -194,7 +204,9 @@ class DataAnalysisTools(BaseToolSpec):
                             "max"]
                     ] = "10y"
     ):
-        """Gets correlation of rolling average for a specified field across a list of tickers"""
+        """Gets correlation of rolling average for a specified field across a list of 
+        tickers"""
+        
         df_fin = None
         for ticker in tickers:
             df = self.get_rolling_average(
@@ -206,10 +218,11 @@ class DataAnalysisTools(BaseToolSpec):
             if df_fin is None:
                 df_fin = df
             else:
-                df_fin = pd.merge(df_fin, 
-                                  df,
-                                  left_index = True,
-                                  right_index = True)
+                df_fin = pd.merge(
+                    df_fin, 
+                    df,
+                    left_index = True,
+                    right_index = True)
         return df_fin.corr()
     
     def get_longest_uptrend(
@@ -234,22 +247,24 @@ class DataAnalysisTools(BaseToolSpec):
         dates = df[sizes == sizes.max()].index 
         return dates, f"{(dates[-1] - dates[0]).days} days"
     
-    def cagr(self,
-             ticker: str,
-             period: Optional[
-                    Literal["1d",
-                            "5d",
-                            "1mo",
-                            "3mo",
-                            "6mo",
-                            "1y",
-                            "2y",
-                            "5y",
-                            "10y",
-                            "ytd",
-                            "max"]
-                    ] = "10y"): 
-        """Computes compounded annual growth rate of closing prices for specified ticker"""
+    def cagr(
+        self,
+        ticker: str,
+        period: Optional[
+            Literal["1d",
+                    "5d",
+                    "1mo",
+                    "3mo",
+                    "6mo",
+                    "1y",
+                    "2y",
+                    "5y",
+                    "10y",
+                    "ytd",
+                    "max"]
+            ] = "10y"): 
+        """Computes compounded annual growth rate of closing prices for specified 
+        ticker"""
         df = self.get_stock_data(ticker=ticker, period=period)
         df['year'] = df.index.year
         trimmed = df.iloc[[0, -1]][['year',f'{ticker}_close']]
@@ -273,11 +288,12 @@ class DataAnalysisTools(BaseToolSpec):
                             "ytd",
                             "max"]
                     ] = "10y",
-        grouping: Optional[Literal["year",
-                                   "quarter",
-                                   "month",
-                                   "week",
-                                   None]] = None
+        grouping: Optional[
+            Literal["year",
+                    "quarter",
+                    "month",
+                    "week",
+                    None]] = None
     ) -> Union[Tuple[float, float], pd.DataFrame]:
         """Gets descriptive statistics of data for grouping of interest"""
         df = self.get_stock_data(ticker=ticker, period=period)
@@ -292,6 +308,34 @@ class DataAnalysisTools(BaseToolSpec):
         if grouping == 'month':
             df['month'] = df.index.month
             return df.groupby(["year", "month"]).mean(), df.groupby(["year", "month"]).std()
+    
+    def forecast(
+        self,
+        tickers: List[str],
+    ) -> Dict[str, Dict[str, List[float]]]:
+        """Develops a forecast of the stock prices for the next 3 months
+        for a list of tickers at 95% confidence. Use this tool exclusively for
+        forecasting future stock prices.
+
+        Args:
+            tickers (List[str]): Tickers of interest
+        Returns:
+            Dict[str, List[float]]: A dictionary containing the forecasts
+            at 95% confidence interval. Example output:
+            {
+                "Ticker": {
+                    "GARCH(1,2)": [..., ..., ...],
+                    "GARCH(1,2)-lo-95": [..., ..., ...],
+                    "GARCH(1,2)-hi-95": [..., ..., ...],
+                }
+            }
+            
+            Whereby "lo-95" refers to the lower boundary  with 95% confidence, 
+            and, "hi-95 refers to the high boundary with 95% confidence. The 
+            values in the list are forecasted stock prices for the next 3 months.
+        """
+        forecaster = Forecaster()
+        return forecaster(tickers = tickers)
 
 def get_da_tools():
     da = DataAnalysisTools()

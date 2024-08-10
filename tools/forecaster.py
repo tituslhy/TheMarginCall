@@ -7,7 +7,8 @@ from dateutil.relativedelta import relativedelta
 from statsforecast.models import (
     GARCH, 
     ARCH, 
-    Naive
+    Naive,
+    _TS
 )
 from statsforecast import StatsForecast
 from datasetsforecast.losses import mae
@@ -19,11 +20,27 @@ class Forecaster:
     """Runs a battery of statistical forecasting methods to forecast
     volatility of a stock"""
     
-    def __init__(self, tickers: List[str]):
+    def __init__(self):
         """Class constructor
-
-        Args:
-            tickers (List[str]): Takes in a list of stock tickers
+        """
+        self.models = [
+            ARCH(1), 
+            ARCH(2), 
+            GARCH(1,1),
+            GARCH(1,2),
+            GARCH(2,2),
+            GARCH(2,1),
+            Naive()
+        ]
+        
+    def post__init__(
+        self, 
+        tickers: List[str], 
+        h: int = 3
+    ):
+        """Pre-processes results for statistical forecasting by calculating the
+        logarthmic returns of stock prices and setting it as the target variable,
+        and creating a cross validiation dataframe object.
         """
         self.tickers = [ticker.upper() for ticker in tickers]
         try:
@@ -34,34 +51,28 @@ class Forecaster:
                 ).strftime("%Y-%m-%d"), 
                 end = datetime.today().strftime("%Y-%m-%d"), 
                 interval='1mo') # use monthly prices
-            
-            self.models = [
-                ARCH(1), 
-                ARCH(2), 
-                GARCH(1,1),
-                GARCH(1,2),
-                GARCH(2,2),
-                GARCH(2,1),
-                Naive()
-            ]
         except Exception as e:
             raise ValueError(e)
+        if len(self.tickers)>1:
+            ## Prepare dataframe
+            self.df = self.df.loc[:, (['Adj Close'], self.tickers)]
+            self.df.columns = self.df.columns.droplevel() # drop MultiIndex
+            self.df = self.df.reset_index()
+            
+            ## Prepare target dataframe
+            self.prices = self.df.melt(id_vars = 'Date')
+            self.prices = self.prices.rename(
+                columns={'Date': 'ds', 'Ticker': 'unique_id', 'value': 'y'}
+            )
         
-    def post__init__(self, h: int = 3):
-        """Pre-processes results for statistical forecasting by calculating the
-        logarthmic returns of stock prices and setting it as the target variable,
-        and creating a cross validiation dataframe object.
-        """
-        ## Prepare dataframe
-        self.df = self.df.loc[:, (['Adj Close'], self.tickers)]
-        self.df.columns = self.df.columns.droplevel() # drop MultiIndex
-        self.df = self.df.reset_index()
-        
-        ## Prepare target dataframe
-        self.prices = self.df.melt(id_vars = 'Date')
-        self.prices = self.prices.rename(
-            columns={'Date': 'ds', 'Ticker': 'unique_id', 'value': 'y'}
-        )
+        else:
+            self.df['Ticker'] = self.tickers[0]
+            self.df = self.df.reset_index()
+            self.prices = self.df[["Date", "Ticker", "Adj Close"]]
+            self.prices = self.prices.rename(
+                columns={'Date': 'ds', 'Ticker': 'unique_id', 'Adj Close': 'y'}
+            )
+            
         self.prices = self.prices[['unique_id', 'ds', 'y']]
         self.prices['rt'] = self.prices['y'].div(self.prices.groupby('unique_id')['y'].shift(1))
         self.prices['rt'] = np.log(self.prices['rt'])
@@ -86,7 +97,10 @@ class Forecaster:
     
     def evaluate(self):
         """Evaluates generated forecasts"""
-        mae_cv = self.crossvalidation_df.groupby(['unique_id', 'cutoff']).apply(self.compute_cv_mae)
+        mae_cv = self.crossvalidation_df.groupby(['unique_id', 'cutoff']).apply(
+            self.compute_cv_mae,
+            models = (self.models)
+        )
         self.mae = mae_cv.groupby('unique_id').mean()
         self.best_models = self.mae.idxmax(axis=1).reset_index().rename(columns={0: "best_model"})
     
@@ -163,7 +177,10 @@ class Forecaster:
         return returns
     
     @staticmethod
-    def compute_cv_mae(crossvalidation_df: pd.DataFrame):
+    def compute_cv_mae(
+        crossvalidation_df: pd.DataFrame,
+        models: List[_TS]
+    ):
         """Compute MAE for all models generated"""
         res = {}
         for mod in models: 
@@ -187,10 +204,11 @@ class Forecaster:
     
     def __call__(
         self,
+        tickers: List[str],
         ticker: Optional[str] = None,  
         h: Optional[int] = 3,
         levels: Optional[List[int]] = [95]
-    ):
+    ) -> Dict[str, List[float]]:
         """Super function to tie all the methods together.
 
         Args:
@@ -199,9 +217,9 @@ class Forecaster:
             levels (Optional[List[int]], optional): _description_. Defaults to [95].
 
         Returns:
-            _type_: _description_
+            Dictionary of forecasts
         """
-        self.post__init__(h=h)
+        self.post__init__(tickers = tickers, h=h)
         self.evaluate()
         self.forecast(h=h, levels=levels)
         return self.forecast_ticker(ticker=ticker)
