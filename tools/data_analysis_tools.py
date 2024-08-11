@@ -251,18 +251,18 @@ class DataAnalysisTools(BaseToolSpec):
         self,
         ticker: str,
         period: Optional[
-            Literal["1d",
-                    "5d",
-                    "1mo",
-                    "3mo",
-                    "6mo",
-                    "1y",
-                    "2y",
-                    "5y",
-                    "10y",
-                    "ytd",
-                    "max"]
-            ] = "10y"): 
+                    Literal["1d",
+                            "5d",
+                            "1mo",
+                            "3mo",
+                            "6mo",
+                            "1y",
+                            "2y",
+                            "5y",
+                            "10y",
+                            "ytd",
+                            "max"]
+                    ] = "10y"): 
         """Computes compounded annual growth rate of closing prices for specified 
         ticker"""
         df = self.get_stock_data(ticker=ticker, period=period)
