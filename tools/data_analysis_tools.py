@@ -1,7 +1,4 @@
 #%%
-import warnings
-warnings.filterwarnings('ignore')
-
 from llama_index.core.tools.tool_spec.base import BaseToolSpec
 import yfinance as yf
 import pandas as pd
@@ -23,6 +20,10 @@ if ("tools" in __curdir__) or \
 else:
     sys.path.append("./src")
 from utils import rename_columns, process_string
+
+import warnings
+warnings.filterwarnings('ignore')
+
 
 #%%
 class DataAnalysisTools(BaseToolSpec):
