@@ -313,9 +313,21 @@ class DataAnalysisTools(BaseToolSpec):
         self,
         tickers: List[str],
     ) -> Dict[str, Dict[str, List[float]]]:
-        """Develops a forecast of the stock prices for the next 3 months
+        """Develops a quick forecast of the stock prices for the next 3 months
         for a list of tickers at 95% confidence. Use this tool exclusively for
-        forecasting future stock prices.
+        forecasting future stock prices. 
+        
+        The models explored here are GARCH, ARCH and Naive forecasting. These models
+        first forecast volatility and converts them into forecasted stock prices. The
+        tool first uses an "autoARIMA-esque" approach to determine the best model (i.e.
+        GARCH/ARCH and their specific hyperparameter configurations), then uses the best
+        model from backtesting to forecast forward volatility and subsequently stock 
+        prices.
+        
+        Volatility in this case is defined as logarthmic returns - simply just applying
+        the natural logarithm on the ratio of the price of the current period and the
+        previous period, where each period refers to the adjusted closing price at the
+        monthly interval.s
 
         Args:
             tickers (List[str]): Tickers of interest
