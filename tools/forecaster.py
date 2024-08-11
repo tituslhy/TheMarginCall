@@ -7,14 +7,30 @@ from dateutil.relativedelta import relativedelta
 from statsforecast.models import (
     GARCH, 
     ARCH, 
-    Naive,
-    _TS
+    Naive
 )
 from statsforecast import StatsForecast
 from datasetsforecast.losses import mae
 from collections import defaultdict
 import warnings
 warnings.filterwarnings("ignore")
+
+models = [
+    ARCH(1), 
+    ARCH(2), 
+    GARCH(1,1),
+    GARCH(1,2),
+    GARCH(2,2),
+    GARCH(2,1),
+    Naive()
+]
+
+def compute_cv_mae(crossvalidation_df):
+    """Compute MAE for all models generated"""
+    res = {}
+    for mod in models: 
+        res[mod] = mae(crossvalidation_df['actual'], crossvalidation_df[str(mod)])
+    return pd.Series(res)
 
 class Forecaster:
     """Runs a battery of statistical forecasting methods to forecast
@@ -23,15 +39,7 @@ class Forecaster:
     def __init__(self):
         """Class constructor
         """
-        self.models = [
-            ARCH(1), 
-            ARCH(2), 
-            GARCH(1,1),
-            GARCH(1,2),
-            GARCH(2,2),
-            GARCH(2,1),
-            Naive()
-        ]
+        
         
     def post__init__(
         self, 
@@ -81,7 +89,7 @@ class Forecaster:
     
         self.sf = StatsForecast(
             df = self.returns, 
-            models = self.models, 
+            models = models, 
             freq = 'MS',
             n_jobs = -1)
         
@@ -97,10 +105,7 @@ class Forecaster:
     
     def evaluate(self):
         """Evaluates generated forecasts"""
-        mae_cv = self.crossvalidation_df.groupby(['unique_id', 'cutoff']).apply(
-            self.compute_cv_mae,
-            models = (self.models)
-        )
+        mae_cv = self.crossvalidation_df.groupby(['unique_id', 'cutoff']).apply(compute_cv_mae)
         self.mae = mae_cv.groupby('unique_id').mean()
         self.best_models = self.mae.idxmax(axis=1).reset_index().rename(columns={0: "best_model"})
     
@@ -110,8 +115,10 @@ class Forecaster:
         """Generates a forecast for the next h periods
 
         Args:
-            h (int, optional): Forecasting horizon (number of periods to forecast). Defaults to 3.
-            levels (Optional[List[int]], optional): Confidence level for prediction intervals. Defaults to [80,95].
+            h (int, optional): Forecasting horizon (number of periods to forecast).
+            Defaults to 3.
+            levels (Optional[List[int]], optional): Confidence level for prediction 
+            intervals. Defaults to [80,95].
         """
         self.forecasts = self.sf.forecast(h=h, level=levels)
         self.forecasts = self.forecasts.reset_index()
@@ -123,6 +130,7 @@ class Forecaster:
             ticker (str): Stock ticker of interest. If this is none, we'll just compute the
             forecasts for all the tickers
         """
+        returns = dict()
         if ticker:
             ticker = ticker.upper()
             filtered = self.forecasts[self.forecasts['unique_id'] == ticker]
@@ -132,13 +140,12 @@ class Forecaster:
             ## Get last price
             last_price = self.prices[self.prices['unique_id']==ticker].tail(1)['y'].values[0]
             
-            return self.compute_forecast(
+            returns[ticker] = self.compute_forecast(
                 last_price = last_price,
                 df = df,
                 ticker = ticker
             )
         else:
-            returns = dict()
             for ticker in self.tickers:
                 filtered = self.forecasts[self.forecasts['unique_id'] == ticker]
                 best_model = self.best_models[self.best_models['unique_id']==ticker]['best_model'].values[0]
@@ -152,8 +159,26 @@ class Forecaster:
                     df = df,
                     ticker = ticker
                 )
-            
-            return returns
+        
+        final = dict()
+        
+        for t in returns:
+            results = pd.DataFrame(returns[t])
+            mapper = dict()
+            for col in results.columns:
+                if "lo" in col:
+                    if "95" in col:
+                        mapper[col] = col.split("-")[0] + "_95%_Confidence_Interval_Low"
+                    else:
+                        mapper[col] = col.split("-")[0] + "_80%_Confidence_Interval_Low"
+                elif "hi" in col:
+                    if "95" in col:
+                        mapper[col] = col.split("-")[0] + "_95%_Confidence_Interval_High"
+                    else:
+                        mapper[col] = col.split("-")[0] + "_80%_Confidence_Interval_High"
+            results.rename(columns = mapper, inplace=True)
+            final[t] = results
+        return final
     
     def show_max(self):
         """Helper function to visually show the best forecasting model"""
@@ -176,17 +201,6 @@ class Forecaster:
 
         return returns
     
-    @staticmethod
-    def compute_cv_mae(
-        crossvalidation_df: pd.DataFrame,
-        models: List[_TS]
-    ):
-        """Compute MAE for all models generated"""
-        res = {}
-        for mod in models: 
-            res[mod] = mae(crossvalidation_df['actual'], crossvalidation_df[str(mod)])
-        return pd.Series(res)
-    
     def plot_post_init(self):
         """Plots forecast against actual test results.
         For debugging purposes"""
@@ -207,7 +221,7 @@ class Forecaster:
         tickers: List[str],
         ticker: Optional[str] = None,  
         h: Optional[int] = 3,
-        levels: Optional[List[int]] = [95]
+        levels: Optional[List[int]] = [80, 95]
     ) -> Dict[str, List[float]]:
         """Super function to tie all the methods together.
 
