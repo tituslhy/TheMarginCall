@@ -87,7 +87,7 @@ def get_groupchat(llm_config = llm_config):
         agent_description = """This agent helps customers undertake statistical analysis
         of financial market data using methods such as correlations, compounded annual
         growth rate, etc.""",
-        agent_type = "structured",
+        agent_type = "react",
     )
 
     technical_analyst = get_agent(

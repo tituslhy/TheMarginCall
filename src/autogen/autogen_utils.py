@@ -193,9 +193,7 @@ def get_agent(llm,
             )
         return ChainlitLLamaIndexConversableAgent(
             name = agent_name,
-            llama_index_agent = AgentRunner(
-                agent_worker = agent_worker
-            ),
+            llama_index_agent = agent_worker.as_agent(),
             system_message = system_message,
             description = agent_description,
             human_input_mode = human_input_mode,
