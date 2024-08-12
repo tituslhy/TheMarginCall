@@ -8,7 +8,7 @@ The Margin Call LLM Group comprises of multiple agents and tools to help you und
 
 ## A demo
 <video width="320" height="240" controls>
-  <source src="images/video.mp4" type="video/mp4">
+  <source src="images/compressed_video.mp4" type="video/mp4">
 </video>
 
 ## Meet the group
