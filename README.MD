@@ -18,8 +18,8 @@ The Margin Call LLM Group has:
 1. The Principal Data Analyst: 
 - This agent helps customers undertake statistical analysis of financial market data using methods such as correlations, compounded annual growth rate, etc.
 - Tools: customized data analysis tool
-- To add: TimeGPT forecasting capabilities.
-- Agent Type: ReAct Planning
+- To add: None
+- Agent Type: ReAct 
 
 2. The Principal Technical Analyst:
 - This agent helps customers undertake technical analysis of financial market data using methods such as stochastic relative strength index, bollinger bands, ichimoku cloud, etc.
@@ -155,3 +155,5 @@ To launch the application
 ```
 chainlit run app.py --watch
 ```
+## Challenges
+Tool selection (at the agent level) and agent selection (at the group chat level) is still something that can be improved on and still an active area of research.
