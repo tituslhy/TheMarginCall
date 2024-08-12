@@ -1,19 +1,21 @@
+#%%
 import os
 from dotenv import load_dotenv, find_dotenv
 from vanna.openai.openai_chat import OpenAI_Chat
 from openai import AzureOpenAI
 from vanna.chromadb.chromadb_vector import ChromaDB_VectorStore
 import yfinance as yf
-from .db_utils import connect_sql
+from db_utils import connect_sql
 
-__curdir__ = os.getcwd()
-if ("src" in __curdir__) or ("notebooks" in __curdir__):
-    db_path = "../database/stocks.db"
-else:
-    db_path = "./database/stocks.db"
+# __curdir__ = os.getcwd()
+# if ("src" in __curdir__) or ("notebooks" in __curdir__):
+#     db_path = "../database/stocks.db"
+# else:
+#     db_path = "./database/stocks.db"
+
+db_path = "../llm/database/stocks.db"
 
 _ = load_dotenv(find_dotenv())
-
 
 client = AzureOpenAI(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],

@@ -1,9 +1,14 @@
 **.DS_Store
-
+**.sqlite3
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+**5c9d4b7d-0b0e-4ee1-9b30-d87a2a47ad79/
+**dc78ffa4-26a3-4470-af60-64a9c15e04fe/
+**credentials.json
+**token.json
 
 # C extensions
 *.so

@@ -204,9 +204,11 @@ def get_groupchat(llm_config = llm_config):
         You spearhead an investment crew known as The Margin Call. 
         
         Route all investment analysis related questions to either the principal 
-        technical  analyst or the principal fundamental analyst. Once either 
+        technical analyst or the principal fundamental analyst. Once either 
         analyst is done with their tasks, they'll route it to the distinguished 
         professor of finance for review.
+        
+        Use the data analyst for all forecasting tasks.
         
         Route all investment concept related questions to the distinguished 
         professor of finance directly. 
