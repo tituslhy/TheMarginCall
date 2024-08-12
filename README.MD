@@ -7,7 +7,7 @@ Welcome to The Margin Call LLM Group!
 The Margin Call LLM Group comprises of multiple agents and tools to help you undertake the best investment decisions!
 
 ## A demo
-[![Watch the video](https://raw.githubusercontent.com/titushy/TheMarginCall/main/images/video.jpg)](https://raw.githubusercontent.com/titushy/TheMarginCall/main/images/videocps_.mp4)
+[![Watch the video](https://raw.githubusercontent.com/titushy/TheMarginCall/main/images/video.jpeg)](https://raw.githubusercontent.com/titushy/TheMarginCall/main/images/videocps_.mp4)
 
 ## Meet the group
 The Margin Call LLM Group has:
