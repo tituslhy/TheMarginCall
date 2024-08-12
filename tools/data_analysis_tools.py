@@ -328,7 +328,7 @@ class DataAnalysisTools(BaseToolSpec):
         Volatility in this case is defined as logarthmic returns - simply just applying
         the natural logarithm on the ratio of the price of the current period and the
         previous period, where each period refers to the adjusted closing price at the
-        monthly interval.s
+        monthly interval.
 
         Args:
             tickers (List[str]): Tickers of interest
