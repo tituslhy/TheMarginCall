@@ -19,7 +19,7 @@ The Margin Call LLM Group has:
 - This agent helps customers undertake statistical analysis of financial market data using methods such as correlations, compounded annual growth rate, etc.
 - Tools: customized data analysis tool
 - To add: TimeGPT forecasting capabilities.
-- Agent Type: Structured Planning
+- Agent Type: ReAct Planning
 
 2. The Principal Technical Analyst:
 - This agent helps customers undertake technical analysis of financial market data using methods such as stochastic relative strength index, bollinger bands, ichimoku cloud, etc.
