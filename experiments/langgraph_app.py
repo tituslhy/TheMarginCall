@@ -524,12 +524,9 @@ async def on_chat_start():
 async def on_message(message: cl.Message):
     inputs = {"messages": [HumanMessage(content=message.content)]}
     app = cl.user_session.get("app")
-    res = app.invoke(inputs, config=RunnableConfig(callbacks=[
-        cl.LangchainCallbackHandler(
-            to_ignore=["ChannelRead", "RunnableLambda", "ChannelWrite", "__start__", "_execute"]
-            # can add more into the to_ignore: "agent:edges", "call_model"
-            # to_keep=
-
-        )]))
+    res = app.invoke(
+        inputs, 
+        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()])
+    )
 
     await cl.Message(content=res["messages"][-1].content).send()
