@@ -12,7 +12,8 @@ __curdir__ = os.getcwd()
 
 if ("tools" in __curdir__) or \
     ("agents" in __curdir__) or \
-    ("tasks" in __curdir__):
+    ("tasks" in __curdir__) or \
+    ("experiments" in __curdir__):
     sys.path.append(os.path.join(
         __curdir__,
         "../src"
